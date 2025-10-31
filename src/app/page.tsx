@@ -1,103 +1,131 @@
+"use client";
 import Image from "next/image";
+import { useState } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+import { axiosInstance } from "@/services/axiosProvider";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const LoginSchema = Yup.object({
+    email: Yup.string()
+      .email("Enter a valid email")
+      .required("Email is required"),
+    password: Yup.string()
+      .min(6, "Min 6 characters")
+      .required("Password is required"),
+  });
+
+  return (
+    <>
+      <main className="min-h-screen grid place-items-center bg-gray-50">
+        <div className="w-full max-w-md rounded-2xl bg-white shadow-lg p-8">
+          {/* Formik Form */}
+          <Formik
+            initialValues={{ email: "", password: "" }}
+            validationSchema={LoginSchema}
+            onSubmit={async (values, { setSubmitting }) => {
+              try {
+                const res = await axiosInstance.post("/login", {
+                  email: values.email,
+                  password: values.password,
+                });
+                localStorage.setItem("token", res.data.data.token);
+                toast.success("Login successful");
+                router.push("/dashboard");
+              } catch (error: any) {
+                console.log(error);
+                toast.error("Invalid credentials");
+              } finally {
+                setSubmitting(false);
+              }
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {({ isSubmitting, isValid, touched }) => (
+              <Form className="space-y-5">
+                {/* Email */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Email
+                  </label>
+                  <Field
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 outline-none focus:border-gray-900"
+                  />
+                  <ErrorMessage
+                    name="email"
+                    component="div"
+                    className="mt-1 text-sm text-red-600"
+                  />
+                </div>
+
+                {/* Password (with show/hide) */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Field
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 outline-none focus:border-gray-900 pr-16"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      className="absolute inset-y-0 right-3 text-sm text-gray-500"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  <ErrorMessage
+                    name="password"
+                    component="div"
+                    className="mt-1 text-sm text-red-600"
+                  />
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={
+                    isSubmitting ||
+                    (Object.keys(touched).length > 0 && !isValid)
+                  }
+                  className="w-full rounded-xl px-4 py-2.5 font-semibold bg-black text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? "Signing in..." : "Sign in"}
+                </button>
+
+                {/* Footer text */}
+                <p className="text-center text-xs text-gray-500">
+                  © {new Date().getFullYear()} Wi Cash CRM
+                </p>
+              </Form>
+            )}
+          </Formik>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    </>
   );
 }
