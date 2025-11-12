@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 const page = () => {
   const [data, setData] = useState<any[]>([]);
@@ -20,6 +21,8 @@ const page = () => {
   const [faceMatchScore, setFaceMatchScore] = useState<string | null>(null);
   const [one, setOne] = useState<boolean>(false);
   const [two, setTwo] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   // console.log(
   //   "ggggggggggg",
   //   livenessUrl,
@@ -40,16 +43,18 @@ const page = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axiosInstance.get("/users");
-        // console.log("✅ API Response:", res.data.data.data);
+        const res = await axiosInstance.get(`/users?page=${page}`);
+        //  console.log("✅ API Response:", res.data.data.totalPages);
         setData(res.data.data.data);
+        setPage(res.data.data.page);
+        setTotalPages(res.data.data.totalPages);
       } catch (error) {
         console.log("❌ Fetch users error:", error);
       }
     };
 
     fetchUsers();
-  }, [hitApi]);
+  }, [hitApi, page]);
 
   const showPopup = (id: string) => {
     // console.log("status id", id);
@@ -284,6 +289,31 @@ const page = () => {
               </tbody>
             </table>
           </div>
+          {/* PAGINATION */}
+          <div className="flex items-center justify-center gap-3 mt-4">
+            {/* Previous */}
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+              className={`w-10 h-10 flex items-center justify-center rounded bg-black cursor-pointer disabled:bg-gray-400  disabled:cursor-not-allowed`}
+            >
+              <FiChevronLeft className="text-white" size={20} />
+            </button>
+
+            <span className="font-medium text-sm">
+              Page {page} of {totalPages}
+            </span>
+
+            {/* Next */}
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage(page + 1)}
+              className={`w-10 h-10 flex items-center justify-center rounded bg-black cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed`}
+            >
+              <FiChevronRight className="text-white" size={20} />
+            </button>
+          </div>
+          {/* END PAGINATION */}
         </div>
       </main>
 
