@@ -5,7 +5,7 @@ import { axiosInstance } from "@/services/axiosProvider";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-import { FiEye } from "react-icons/fi";
+import Image from "next/image";
 
 const page = () => {
   const [data, setData] = useState<any[]>([]);
@@ -14,6 +14,19 @@ const page = () => {
   const [open, setOpen] = useState(false);
   const [openFacIdMatchPopup, setFaceIdMatchPopup] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [livenessUrl, setLivenessUrl] = useState<string | null>(null);
+  const [livenessScore, setLivenessScore] = useState<string | null>(null);
+  const [cardUrl, setCardUrl] = useState<string | null>(null);
+  const [faceMatchScore, setFaceMatchScore] = useState<string | null>(null);
+  const [one, setOne] = useState<boolean>(false);
+  const [two, setTwo] = useState<boolean>(false);
+  // console.log(
+  //   "ggggggggggg",
+  //   livenessUrl,
+  //   livenessScore,
+  //   cardUrl,
+  //   faceMatchScore
+  // );
 
   // console.log("use state user data", data);
 
@@ -97,16 +110,53 @@ const page = () => {
       toast.error("Logout failed!");
     }
   };
-  const liveNessPhotoAndScore = (livenessImage: any) => {
-    setSelectedImage(livenessImage);
+  const liveNessPhotoAndScore = async (phone: any) => {
+    setOne(true);
+    setTwo(false);
+    try {
+      const res = await axiosInstance.get(`/get-photo?phone=${phone}`);
+      //  console.log("✅ API Response:", res.data.data.user.facematch_score);
+      setLivenessUrl(res.data.data.photos.liveness_url);
+      setCardUrl("");
+      //setFaceMatchScore(res.data.data.user.facematch_score);
+      setLivenessScore(res.data.data.user.liveness_score);
+      //  setData(res.data.data.data);
+    } catch (error) {
+      console.log("❌ Fetch users error:", error);
+    }
+
+    setSelectedImage("");
     setOpen(true);
   };
-  const idCard = (idCard: any) => {
-    setSelectedImage(idCard);
+  const idCard = async (phone: any) => {
+    setOne(false);
+    setTwo(true);
+    try {
+      const res = await axiosInstance.get(`/get-photo?phone=${phone}`);
+      // console.log("✅ API Response:", res.data.data.user.facematch_score);
+      setLivenessUrl("");
+      setCardUrl(res.data.data.photos.card_url);
+      // setFaceMatchScore(res.data.data.user.facematch_score);
+      setLivenessScore("");
+      //  setData(res.data.data.data);
+    } catch (error) {
+      console.log("❌ Fetch users error:", error);
+    }
+    setSelectedImage("");
     setOpen(true);
   };
-  const faceIdMatch = (p0: any[]) => {
-    console.log("HHHHHHHHHH", p0);
+  const faceIdMatch = async (phone: any) => {
+    try {
+      const res = await axiosInstance.get(`/get-photo?phone=${phone}`);
+      // console.log("✅ API Response:", res.data.data.user.facematch_score);
+      setLivenessUrl(res.data.data.photos.liveness_url);
+      setCardUrl(res.data.data.photos.card_url);
+      setFaceMatchScore(res.data.data.user.facematch_score);
+      // setLivenessScore("");
+      //  setData(res.data.data.data);
+    } catch (error) {
+      console.log("❌ Fetch users error:", error);
+    }
     setFaceIdMatchPopup(true);
   };
 
@@ -156,7 +206,7 @@ const page = () => {
 
                         {/* Phone Number */}
                         <td className="py-3 px-4">
-                          {item?.phone_number || item?.phone || "-"}
+                          {item?.phone_number || "-"}
                         </td>
 
                         {/* ✅ Liveness Photo & Score */}
@@ -164,25 +214,19 @@ const page = () => {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() =>
-                                liveNessPhotoAndScore(item?.livenessPhoto)
+                                liveNessPhotoAndScore(item.phone_number)
                               }
                               className="px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs border border-gray-300"
                             >
                               View Image
                             </button>
-
-                            <span className="text-sm font-medium text-gray-800">
-                              {item?.livenessScore
-                                ? `${item?.livenessScore}%`
-                                : "0%"}
-                            </span>
                           </div>
                         </td>
 
                         {/* ✅ ID Card */}
                         <td className="py-3 px-4">
                           <button
-                            onClick={() => idCard(item?.idCardPhoto)}
+                            onClick={() => idCard(item.phone_number)}
                             className="px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs border border-gray-300"
                           >
                             View ID Card
@@ -193,22 +237,11 @@ const page = () => {
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() =>
-                                faceIdMatch([
-                                  item?.livenessPhoto || "/images/no-image.png",
-                                  item?.idCardPhoto || "/images/no-idcard.png",
-                                ])
-                              }
+                              onClick={() => faceIdMatch(item.phone_number)}
                               className="px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs border border-gray-300"
                             >
                               View Face ID Match Score
                             </button>
-
-                            <span className="text-sm font-medium text-gray-800">
-                              {item?.faceIdMatchScore
-                                ? `${item?.faceIdMatchScore}%`
-                                : "0%"}
-                            </span>
                           </div>
                         </td>
 
@@ -263,14 +296,33 @@ const page = () => {
         >
           <div className="bg-white p-5 rounded-lg shadow-lg relative w-96 text-center">
             <h2 className="text-lg font-semibold mb-3">Preview</h2>
-
             {/* ✅ Show no-image fallback */}
-            <img
-              src={selectedImage || "no-image.png"}
-              alt="No data"
-              className="w-80 h-80 object-cover rounded border mx-auto"
-            />
+            {one && (
+              <Image
+                src={livenessUrl || "/images/no-image.png"}
+                alt="Liveness"
+                width={300}
+                height={300}
+                className="object-cover rounded border mx-auto"
+                unoptimized
+              />
+            )}
+            {two && (
+              <Image
+                src={cardUrl || "/images/no-image.png"}
+                alt="Card"
+                width={300}
+                height={300}
+                className="object-cover rounded border mx-auto"
+                unoptimized
+              />
+            )}
 
+            {livenessScore && (
+              <p className="text-center mt-3 font-semibold">
+                Liveness Score: {Number(livenessScore).toFixed(2)}%
+              </p>
+            )}
             {/* ✅ Close Button */}
             <button
               onClick={() => setOpen(false)}
@@ -299,28 +351,40 @@ const page = () => {
               Face & ID Match Preview
             </h2>
 
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              {/* ✅ Face Image */}
-              <div className="flex flex-col items-center">
-                <img
-                  src="/images/no-image.png"
-                  alt="Face"
-                  className="w-64 h-64 object-cover rounded border"
-                />
-                <p className="mt-2 text-sm font-medium text-gray-700">Selfie</p>
+            <div className="flex flex-col items-center gap-4">
+              {/* Images row */}
+              <div className="flex flex-wrap items-center justify-center gap-6">
+                {/* Selfie (Liveness) */}
+                <div className="flex flex-col items-center">
+                  <img
+                    src={livenessUrl ?? "/images/no-image.png"}
+                    alt="Selfie (Liveness)"
+                    className="w-64 h-64 object-cover rounded border"
+                  />
+                  <p className="mt-2 text-sm font-medium text-gray-700">
+                    Selfie
+                  </p>
+                </div>
+
+                {/* ID Card */}
+                <div className="flex flex-col items-center">
+                  <img
+                    src={cardUrl ?? "/images/no-idcard.png"}
+                    alt="ID Card"
+                    className="w-64 h-64 object-cover rounded border"
+                  />
+                  <p className="mt-2 text-sm font-medium text-gray-700">
+                    ID Card
+                  </p>
+                </div>
               </div>
 
-              {/* ✅ ID Card Image */}
-              <div className="flex flex-col items-center">
-                <img
-                  src="/images/no-idcard.png"
-                  alt="ID Card"
-                  className="w-64 h-64 object-cover rounded border"
-                />
-                <p className="mt-2 text-sm font-medium text-gray-700">
-                  ID Card
-                </p>
-              </div>
+              {/* Only Face Match Score */}
+              <p className="text-sm font-semibold text-green-700">
+                {faceMatchScore
+                  ? `Face Match: ${faceMatchScore}%`
+                  : "Face Match: 0"}
+              </p>
             </div>
 
             <div className="flex justify-center">

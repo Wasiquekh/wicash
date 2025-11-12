@@ -14,8 +14,12 @@ export const axiosInstance = axios.create({
 // ✅ Request Interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // const token = localStorage.getItem("token");
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
+    const token = localStorage.getItem("token"); // ✅ read using key "token"
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`; // ✅ add token in header
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -28,7 +32,6 @@ axiosInstance.interceptors.response.use(
     const status = error?.response?.status;
     const requestUrl = error?.config?.url || "";
 
-    // ✅ Ignore 401 for LOGIN API so toast can show
     if (status === 401 && !requestUrl.includes("/login")) {
       console.warn("⛔ Session expired. Redirecting to login...");
 
