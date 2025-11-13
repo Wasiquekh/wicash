@@ -333,7 +333,7 @@ const page = () => {
                 alt="Liveness"
                 width={300}
                 height={300}
-                className="object-cover rounded border mx-auto"
+                className="object-cover rounded border mx-auto h-[30]"
                 unoptimized
               />
             )}
@@ -343,7 +343,7 @@ const page = () => {
                 alt="Card"
                 width={300}
                 height={300}
-                className="object-cover rounded border mx-auto"
+                className="object-cover rounded border mx-auto h-[400px]"
                 unoptimized
               />
             )}
