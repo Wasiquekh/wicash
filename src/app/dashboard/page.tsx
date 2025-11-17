@@ -350,7 +350,8 @@ const page = () => {
 
             {livenessScore && (
               <p className="text-center mt-3 font-semibold">
-                Liveness Score: {Number(livenessScore).toFixed(2)}%
+                Liveness Score:{" "}
+                {Number(livenessScore) === 100 ? "True" : "False"}
               </p>
             )}
             {/* ✅ Close Button */}
