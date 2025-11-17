@@ -350,7 +350,7 @@ const page = () => {
 
             {livenessScore && (
               <p className="text-center mt-3 font-semibold">
-                Liveness Score:{" "}
+                Liveness Value:{" "}
                 {Number(livenessScore) === 100 ? "True" : "False"}
               </p>
             )}
@@ -387,10 +387,13 @@ const page = () => {
               <div className="flex flex-wrap items-center justify-center gap-6">
                 {/* Selfie (Liveness) */}
                 <div className="flex flex-col items-center">
-                  <img
-                    src={livenessUrl ?? "/images/no-image.png"}
+                  <Image
+                    src={livenessUrl || "/images/no-image.png"} // fallback
                     alt="Selfie (Liveness)"
-                    className="w-64 h-64 object-cover rounded border"
+                    width={300}
+                    height={300}
+                    className="object-cover rounded border mx-auto "
+                    unoptimized
                   />
                   <p className="mt-2 text-sm font-medium text-gray-700">
                     Selfie
@@ -399,10 +402,13 @@ const page = () => {
 
                 {/* ID Card */}
                 <div className="flex flex-col items-center">
-                  <img
-                    src={cardUrl ?? "/images/no-idcard.png"}
+                  <Image
+                    src={cardUrl || "/images/no-idcard.png"} // fallback
                     alt="ID Card"
-                    className="w-64 h-64 object-cover rounded border"
+                    width={300}
+                    height={300}
+                    className="object-cover rounded border mx-auto "
+                    unoptimized
                   />
                   <p className="mt-2 text-sm font-medium text-gray-700">
                     ID Card
@@ -412,9 +418,9 @@ const page = () => {
 
               {/* Only Face Match Score */}
               <p className="text-sm font-semibold text-green-700">
-                {faceMatchScore
-                  ? `Face Match: ${faceMatchScore}%`
-                  : "Face Match: 0"}
+                {`Face Match: ${
+                  faceMatchScore ? (Number(faceMatchScore) * 100).toFixed(0) : 0
+                }%`}
               </p>
             </div>
 
